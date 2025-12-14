@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from .calendar_scheduler import CalendarService
 import logging
+
+from calendar_scheduler import CalendarService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,20 +18,20 @@ async def health():
 async def webhook(request: Request):
     try:
         data = await request.json()
-        logger.info(f"Webhook received: {data}")
 
-        message_type = data.get("message", {}).get("type")
+        message = data.get("message", {})
+        message_type = message.get("type")
+
         call = data.get("call", {})
-        variables = call.get("variableValues") or call.get("variables") or {}
+        variables = call.get("variableValues") or {}
 
         if message_type != "conversation-update":
-            return JSONResponse({"success": True})
+            return JSONResponse({"ok": True})
 
-        required_fields = ["userName", "meetingDate", "meetingTime"]
-        if not all(variables.get(f) for f in required_fields):
-            logger.info("Conversation update received, but variables incomplete.")
-            return JSONResponse({"success": True})
-        
+        required = ["userName", "meetingDate", "meetingTime"]
+        if not all(variables.get(k) for k in required):
+            return JSONResponse({"ok": True})
+
         event = calendar.create_event({
             "name": variables["userName"],
             "date": variables["meetingDate"],
@@ -38,15 +39,11 @@ async def webhook(request: Request):
             "title": variables.get("meetingTitle", "Meeting")
         })
 
-        logger.info("Calendar event created successfully")
-
         return JSONResponse({
             "success": True,
-            "message": "Event created",
             "event": event
         })
 
     except Exception as e:
-        logger.exception("Webhook processing failed")
-        
-        return JSONResponse({"success": False, "error": str(e)})
+        logger.exception("Webhook failed")
+        return JSONResponse({"ok": True})
