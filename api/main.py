@@ -21,7 +21,7 @@ async def health():
 async def root():
     return {"message": "Webhook endpoint is running"}
 
-@app.post("/api/webhook")
+@app.post("/webhook")
 async def webhook(request: Request):
     try:
         data = await request.json()
