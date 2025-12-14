@@ -37,7 +37,7 @@ agent_config = {
         "transcript",
         "conversation-update",
         "status-update",
-        "assistant.finished"
+        "assistant.started"
     ]
 }
 
