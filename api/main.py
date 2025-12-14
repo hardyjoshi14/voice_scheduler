@@ -23,17 +23,14 @@ async def webhook(request: Request):
         call = data.get("call", {})
         variables = call.get("variableValues") or call.get("variables") or {}
 
-        # ✅ Always ACK non-final events
         if message_type != "conversation-update":
             return JSONResponse({"success": True})
 
-        # ✅ Only proceed when all required variables exist
         required_fields = ["userName", "meetingDate", "meetingTime"]
         if not all(variables.get(f) for f in required_fields):
             logger.info("Conversation update received, but variables incomplete.")
             return JSONResponse({"success": True})
-
-        # ✅ Create calendar event ONCE
+        
         event = calendar.create_event({
             "name": variables["userName"],
             "date": variables["meetingDate"],
@@ -51,5 +48,5 @@ async def webhook(request: Request):
 
     except Exception as e:
         logger.exception("Webhook processing failed")
-        # ⚠️ Still return 200 so Vapi doesn't break the call
+        
         return JSONResponse({"success": False, "error": str(e)})
