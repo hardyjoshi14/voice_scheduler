@@ -1,15 +1,14 @@
+# webhook_server.py
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import logging
-
-from calendar_scheduler import CalendarService
+from calendar_scheduler import CalendarService  # your service to save events
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
-calendar = CalendarService()
-
+calendar = CalendarService()  
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
@@ -18,31 +17,23 @@ async def health():
 async def webhook(request: Request):
     try:
         data = await request.json()
-
         message = data.get("message", {})
-        message_type = message.get("type")
-
-        if message_type != "conversation-update":
-            return {"ok": True}
-
         call = data.get("call", {})
-        variables = call.get("variableValues") or {}
 
-        required = ["userName", "meetingDate", "meetingTime"]
-        if not all(variables.get(k) for k in required):
-            return {"ok": True}
+        variables = call.get("variableValues", {})
 
-        logger.info(f"FINAL VARIABLES: {variables}")
+        if variables.get("userName") and variables.get("meetingDate") and variables.get("meetingTime") and variables.get("meetingTitle"):
 
-        event = calendar.create_event({
-            "name": variables["userName"],
-            "date": variables["meetingDate"],
-            "time": variables["meetingTime"],
-            "title": variables.get("meetingTitle", "Meeting")
-        })
+            event = calendar.create_event({
+                "name": variables["userName"],
+                "date": variables["meetingDate"],
+                "time": variables["meetingTime"],
+                "title": variables.get("meetingTitle", "Meeting")
+            })
+            logger.info(f"Meeting created: {event}")
 
-        return {"success": True, "event": event}
+        return JSONResponse({"ok": True})
 
-    except Exception:
+    except Exception as e:
         logger.exception("Webhook failed")
-        return {"ok": True}
+        return JSONResponse({"ok": True})
