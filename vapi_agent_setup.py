@@ -33,12 +33,7 @@ agent_config = {
     "voice": {"provider": "azure", "voiceId": "en-US-JennyNeural"},
     "transcriber": {"provider": "deepgram", "model": "nova-2"},
     "server": {"url": WEBHOOK_URL, "timeoutSeconds": 20},
-    "clientMessages": [
-        "transcript",
-        "conversation-update",
-        "status-update",
-        "assistant.started"
-    ]
+    #"clientMessages": ["conversation-update", "status-update", "speech-update"]
 }
 
 response = requests.post(
