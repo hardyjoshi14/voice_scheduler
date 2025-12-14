@@ -25,6 +25,7 @@ Conversation flow:
 5. Confirm naturally:
    “Just to confirm, I have a meeting with {userName} on {meetingDate spoken naturally} at {meetingTime spoken naturally}, titled {meetingTitle}. Is that correct?”
 6. If the user confirms:
+   - Call the tool "saveMeeting" with all variables: userName, meetingDate, meetingTime, meetingTitle
    - Stop the conversation
    - Send all variables to the webhook under call.variableValues
 7. End the call by saying:

@@ -34,7 +34,25 @@ agent_config = {
     "transcriber": {"provider": "deepgram", "model": "nova-2"},
     "server": {"url": WEBHOOK_URL, "timeoutSeconds": 20},
     "clientMessages": ["tool-calls","tool-calls-result","status-update"],
+    
+    "tools": [
+        {
+            "name": "saveMeeting",
+            "description": "Save meeting details after user confirms",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "userName": {"type": "string"},
+                    "meetingDate": {"type": "string"},
+                    "meetingTime": {"type": "string"},
+                    "meetingTitle": {"type": "string"}
+                },
+                "required": ["userName", "meetingDate", "meetingTime"]
+            }
+        }
+    ]
 }
+
 
 
 response = requests.post(
