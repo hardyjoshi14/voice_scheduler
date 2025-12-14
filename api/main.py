@@ -16,36 +16,42 @@ async def health():
 @app.post("/webhook")
 async def webhook(request: Request):
     try:
-        data = await request.json()
-        logger.info(f"Webhook received: {data}")
+        payload = await request.json()
+        logger.info(f"Webhook received: {payload}")
 
-        message_type = data.get("message", {}).get("type")
+        message = payload.get("message", {})
+        call = message.get("call", {})
+        vars = call.get("variableValues", {})
 
-        # ✅ 1. Ignore ALL non-final events
-        if message_type != "tool.completed":
-            return JSONResponse({"success": True})
+        if message.get("type") != "conversation-update":
+            return JSONResponse({"ok": True})
 
-        # ✅ 2. ONLY handle final tool call
-        variables = data.get("call", {}).get("variableValues", {})
+        user_name = vars.get("userName")
+        meeting_date = vars.get("meetingDate")
+        meeting_time = vars.get("meetingTime")
+        meeting_title = vars.get("meetingTitle", "Meeting")
 
-        required = ["userName", "meetingDate", "meetingTime"]
-        if not all(variables.get(k) for k in required):
-            logger.warning("Missing required variables on tool.completed")
-            return JSONResponse({"success": False, "error": "Missing required fields"})
+        if not user_name or not meeting_date or not meeting_time:
+            logger.info("Variables not complete yet, skipping")
+            return JSONResponse({"ok": True})
 
         event = calendar.create_event({
-            "name": variables["userName"],
-            "date": variables["meetingDate"],
-            "time": variables["meetingTime"],
-            "title": variables.get("meetingTitle", "Meeting")
+            "name": user_name,
+            "date": meeting_date,
+            "time": meeting_time,
+            "title": meeting_title
         })
+
+        logger.info("Calendar event created successfully")
 
         return JSONResponse({
             "success": True,
-            "message": "Event created",
             "event": event
         })
 
     except Exception as e:
         logger.exception("Webhook error")
-        return JSONResponse({"success": False, "error": str(e)}, status_code=200)
+        return JSONResponse(
+            {"success": False, "error": str(e)},
+            status_code=500
+        )

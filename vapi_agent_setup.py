@@ -15,6 +15,7 @@ headers = {
 agent_config = {
     "name": "Voice Scheduler",
     "firstMessage": "Hello! I'm your scheduling assistant. May I have your name?",
+    "endCallMessage": "Your meeting has been scheduled successfully. Goodbye.",
     "silenceTimeoutSeconds": 15,
     "maxDurationSeconds": 300,
     "model": {
