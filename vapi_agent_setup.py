@@ -24,7 +24,7 @@ agent_config = {
     },
     "voice": {"provider": "azure", "voiceId": "en-US-JennyNeural"},
     "transcriber": {"provider": "deepgram", "model": "nova2"},
-    "server": {"url": WEBHOOK_URL}
+    "server": WEBHOOK_URL
 }
 
 response = requests.post(
