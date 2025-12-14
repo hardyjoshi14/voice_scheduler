@@ -2,7 +2,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import logging
-from calendar_scheduler import CalendarService  # your service to save events
+from calendar_scheduler import CalendarService  
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,6 +17,7 @@ async def health():
 async def webhook(request: Request):
     try:
         data = await request.json()
+        logger.info(f"VAPI Payload Recieved: {data}")
         message = data.get("message", {})
         call = data.get("call", {})
 
@@ -31,6 +32,9 @@ async def webhook(request: Request):
                 "title": variables.get("meetingTitle", "Meeting")
             })
             logger.info(f"Meeting created: {event}")
+        else:
+            logger.error(f"Required variables missing! Received variables: {variables}") 
+            logger.error(f"VAPI message type: {data.get('message', {}).get('type')}")
 
         return JSONResponse({"ok": True})
 

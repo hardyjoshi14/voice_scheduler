@@ -41,7 +41,7 @@ class CalendarService:
         }
 
         created_event = self.service.events().insert(
-            calendarId='primary',
+            calendarId='200c381b5325a04e286aca01ee48e02233316fb1131b5a6e03486fb33793fb98@group.calendar.google.com',
             body=event
         ).execute()
 
