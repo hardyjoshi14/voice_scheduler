@@ -15,7 +15,7 @@ headers = {
 agent_config = {
     "name": "Voice Scheduler",
     "firstMessage": "Hello! I'm your scheduling assistant. May I have your name?",
-    "silenceTimeoutSeconds": 30,
+    "silenceTimeoutSeconds": 15,
     "maxDurationSeconds": 300,
     "model": {
         "provider": "openai",
@@ -25,8 +25,7 @@ agent_config = {
         "messages": [
             {
                 "role": "system",
-                "content": open("system_prompt.txt").read()  # save the system prompt above in this file
-            }
+                "content": open("system_prompt.txt").read()  
         ]
     },
     "voice": {"provider": "azure", "voiceId": "en-US-JennyNeural"},
