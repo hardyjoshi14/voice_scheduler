@@ -15,37 +15,49 @@ async def health():
 
 @app.post("/webhook")
 async def webhook(request: Request):
-    """
-    Webhook for VAPI calls
-    {
-        "call": {
-            "variables": {
-                "userName": "Alice",
-                "meetingDate": "2025-12-15",
-                "meetingTime": "14:30",
-                "meetingTitle": "Project Sync"
-            }
-        }
-    }
-    """
     try:
         data = await request.json()
         logger.info(f"Webhook received: {data}")
 
-        vars = data.get("call", {}).get("variables", {})
-        if not vars.get("userName") or not vars.get("meetingDate") or not vars.get("meetingTime"):
-            return JSONResponse({"success":False, "error": "Missing required fields"})
-        
+        message = data.get("message", {})
+
+        if message.get("type") != "tool.completed":
+            return JSONResponse({"ignored": True})
+
+        call = message.get("call", {})
+        variables = call.get("variableValues", {})
+
+        logger.info(f"Extracted variables: {variables}")
+
+        user_name = variables.get("userName")
+        meeting_date = variables.get("meetingDate")
+        meeting_time = variables.get("meetingTime")
+        meeting_title = variables.get("meetingTitle", "Meeting")
+
+        if not user_name or not meeting_date or not meeting_time:
+            logger.error("Missing required variables")
+            return JSONResponse(
+                {"success": False, "error": "Missing required fields"},
+                status_code=400
+            )
+
         event = calendar.create_event({
-            "name": vars["userName"],
-            "date": vars["meetingDate"],
-            "time": vars["meetingTime"],
-            "title": vars.get("meetingTitle", "Meeting")
+            "name": user_name,
+            "date": meeting_date,
+            "time": meeting_time,
+            "title": meeting_title
         })
-        return JSONResponse({"success": True, "message": "Event created", "event": event})
-    
+
+        logger.info("Calendar event created successfully")
+
+        return JSONResponse(
+            {"success": True, "message": "Event created", "event": event},
+            status_code=200
+        )
+
     except Exception as e:
-        logger.error(f"Webhook error: {e}")
-        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
-    
-    
+        logger.exception("Webhook processing failed")
+        return JSONResponse(
+            {"success": False, "error": str(e)},
+            status_code=500
+        )
