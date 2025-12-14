@@ -14,18 +14,27 @@ headers = {
 
 agent_config = {
     "name": "Voice Scheduler",
-    "firstMessage": "Helll0! I'm your scheduling assistant. May I have your name?",
-    "endCallMessage": "Great! Your meeting is scheduled.",
+    "firstMessage": "Hello! I'm your scheduling assistant. May I have your name?",
+    "silenceTimeoutSeconds": 30,
+    "maxDurationSeconds": 300,
     "model": {
         "provider": "openai",
         "model": "gpt-4o",
         "temperature": 0.5,
-        "maxTokens": 200
+        "maxTokens": 250,
+        "messages": [
+            {
+                "role": "system",
+                "content": open("system_prompt.txt").read()  # save the system prompt above in this file
+            }
+        ]
     },
     "voice": {"provider": "azure", "voiceId": "en-US-JennyNeural"},
-    "transcriber": {"provider": "deepgram", "model": "nova2"},
-    "server": {"url": WEBHOOK_URL}
+    "transcriber": {"provider": "deepgram", "model": "nova-2"},
+    "server": {"url": WEBHOOK_URL, "timeoutSeconds": 20},
+    "clientMessages": ["tool-calls","tool-calls-result","status-update"],
 }
+
 
 response = requests.post(
     "https://api.vapi.ai/assistant",
