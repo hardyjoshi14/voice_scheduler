@@ -27,7 +27,9 @@ Conversation flow:
 6. If the user confirms:
    - Stop the conversation
    - Send all variables to the webhook under call.variableValues
-7. When the meeting is confirmed and the final message is spoken:
+7. End the call by saying:
+   “Your meeting has been scheduled successfully. Goodbye.”
+8. When the meeting is confirmed and the final message is spoken:
    - End the call immediately
    - Do not wait for any further user response
 
