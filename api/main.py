@@ -22,7 +22,6 @@ async def webhook(request: Request):
         message = data.get("message", {})
         message_type = message.get("type")
 
-        # Always ACK non-final events
         if message_type != "conversation-update":
             return {"ok": True}
 
@@ -46,5 +45,4 @@ async def webhook(request: Request):
 
     except Exception:
         logger.exception("Webhook failed")
-        # NEVER return 500 to Vapi
         return {"ok": True}
