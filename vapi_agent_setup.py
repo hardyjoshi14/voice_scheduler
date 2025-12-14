@@ -25,7 +25,8 @@ agent_config = {
         "messages": [
             {
                 "role": "system",
-                "content": open("system_prompt.txt").read()  
+                "content": open("system_prompt.txt").read()
+            }
         ]
     },
     "voice": {"provider": "azure", "voiceId": "en-US-JennyNeural"},
