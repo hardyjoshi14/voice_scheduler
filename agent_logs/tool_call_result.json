@@ -1,0 +1,9 @@
+{
+  "name": "schedule_meeting",
+  "role": "tool_call_result",
+  "time": 1765799270609,
+  "result": "Meeting scheduled successfully for Hardi Duche on 2023-12-16 at 13:00. Title: Project update. Event ID: 84ghf29uh2tae81aq9a93aonjc",
+  "metadata": {},
+  "toolCallId": "call_midwiSF3AwjwKKpDRdVWDePi",
+  "secondsFromStart": 57.735
+}

@@ -1,0 +1,16 @@
+{
+  "role": "tool_calls",
+  "time": 1765799267982,
+  "message": "",
+  "toolCalls": [
+    {
+      "id": "call_midwiSF3AwjwKKpDRdVWDePi",
+      "type": "function",
+      "function": {
+        "name": "schedule_meeting",
+        "arguments": "{\n  \"userName\": \"Hardi Duche\",\n  \"meetingDate\": \"2023-12-16\",\n  \"meetingTime\": \"13:00\",\n  \"meetingTitle\": \"Project update\"\n}"
+      }
+    }
+  ],
+  "secondsFromStart": 55.108
+}
