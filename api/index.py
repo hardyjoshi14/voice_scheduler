@@ -5,32 +5,33 @@ import logging
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 
-project_root = os.path.dirname(os.path.dirname(__file__))  
-sys.path.insert(0, project_root)  
-sys.path.append(project_root)    
+# SIMPLIFY PATH SETUP - Vercel runs from /var/task
+sys.path.insert(0, os.path.dirname(__file__))  # Add current directory to path
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 logger.info(f"✅ Current directory: {os.getcwd()}")
-logger.info(f"✅ Project root added to path: {project_root}")
-if os.path.exists(project_root):
-    logger.info(f"✅ Files in project root: {os.listdir(project_root)}")
+logger.info(f"✅ Files in current dir: {os.listdir('.')}")
 
 app = FastAPI(title="Voice Scheduler API")
 
 try:
+    # This should work now since calendar_scheduler.py is in the same directory
     from calendar_scheduler import CalendarService
     calendar = CalendarService()
     logger.info("CalendarService imported successfully")
 except ImportError as e:
     logger.error(f"Failed to import CalendarService: {e}")
     logger.error(f"Python path is: {sys.path}")
+    # List available files to debug
+    logger.error(f"Available files: {os.listdir('.')}")
     calendar = None
 except Exception as e:
     logger.error(f"CalendarService initialization failed: {e}")
     calendar = None
 
+# REST OF YOUR CODE REMAINS THE SAME...
 @app.get("/")
 async def root():
     """Root endpoint - API status"""
@@ -205,9 +206,7 @@ async def debug():
         "python_path": sys.path,
         "current_dir": os.getcwd(),
         "files_in_current": os.listdir('.'),
-        "parent_dir": os.path.dirname(os.getcwd()),
-        "files_in_parent": os.listdir('..') if os.path.exists('..') else [],
         "service_account_env_set": "SERVICE_ACCOUNT_JSON" in os.environ,
-        "calendar_service_file_exists": os.path.exists('../calendar_scheduler.py'),
-        "import_error": "Check logs for details"
+        "calendar_service_file_exists": os.path.exists('calendar_scheduler.py'),
+        "calendar_service_import_attempted": calendar is not None
     }
