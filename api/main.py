@@ -17,10 +17,13 @@ async def health():
 async def webhook(request: Request):
     try:
         data = await request.json()
-        logger.info(f"VAPI Payload Recieved: {data}")
-        message = data.get("message", {})
-        call = data.get("call", {})
+        message_type = data.get("message", {}).get("type")
 
+        if message_type != "endCall":
+            logger.info(f"Ignoring message type: {message_type}")
+            return JSONResponse({"ok": True})
+        
+        call = data.get("call", {})
         variables = call.get("variableValues", {})
 
         if variables.get("userName") and variables.get("meetingDate") and variables.get("meetingTime") and variables.get("meetingTitle"):
@@ -32,10 +35,6 @@ async def webhook(request: Request):
                 "title": variables.get("meetingTitle", "Meeting")
             })
             logger.info(f"Meeting created: {event}")
-        else:
-            logger.error(f"Required variables missing! Received variables: {variables}") 
-            logger.error(f"VAPI message type: {data.get('message', {}).get('type')}")
-
         return JSONResponse({"ok": True})
 
     except Exception as e:
