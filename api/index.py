@@ -5,9 +5,7 @@ import logging
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 
-# SIMPLIFY PATH SETUP - Vercel runs from /var/task
-sys.path.insert(0, os.path.dirname(__file__))  # Add current directory to path
-
+sys.path.insert(0, os.path.dirname(__file__))  
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -17,21 +15,18 @@ logger.info(f"✅ Files in current dir: {os.listdir('.')}")
 app = FastAPI(title="Voice Scheduler API")
 
 try:
-    # This should work now since calendar_scheduler.py is in the same directory
     from calendar_scheduler import CalendarService
     calendar = CalendarService()
     logger.info("CalendarService imported successfully")
 except ImportError as e:
     logger.error(f"Failed to import CalendarService: {e}")
     logger.error(f"Python path is: {sys.path}")
-    # List available files to debug
     logger.error(f"Available files: {os.listdir('.')}")
     calendar = None
 except Exception as e:
     logger.error(f"CalendarService initialization failed: {e}")
     calendar = None
 
-# REST OF YOUR CODE REMAINS THE SAME...
 @app.get("/")
 async def root():
     """Root endpoint - API status"""
@@ -50,21 +45,26 @@ async def health():
 @app.post("/webhook")
 async def webhook(request: Request):
     """
-    Main webhook endpoint for VAPI function calls
+    Main webhook endpoint for VAPI tool calls
     Expected payload from VAPI:
     {
         "message": {
-            "type": "function-call",
-            "functionCall": {
-                "name": "schedule_meeting",
-                "toolCallId": "abc123",
-                "arguments": {
-                    "userName": "John Doe",
-                    "meetingDate": "2024-12-15",
-                    "meetingTime": "14:30",
-                    "meetingTitle": "Project Kickoff"
+            "type": "tool-calls",
+            "toolCalls": [
+                {
+                    "id": "call_P95MWy6TljRomJ1Tdis5QC8W",
+                    "type": "function",
+                    "function": {
+                        "name": "schedule_meeting",
+                        "arguments": {
+                            "userName": "John Doe",
+                            "meetingDate": "2024-12-15",
+                            "meetingTime": "14:30",
+                            "meetingTitle": "Project Kickoff"
+                        }
+                    }
                 }
-            }
+            ]
         }
     }
     """
@@ -75,16 +75,97 @@ async def webhook(request: Request):
         message = data.get("message", {})
         message_type = message.get("type")
         
-        if message_type == "function-call":
+        if message_type == "tool-calls":
+            tool_calls = message.get("toolCalls", [])
+            
+            if not tool_calls:
+                logger.info("No tool calls in message")
+                return JSONResponse({"ok": True})
+            
+            results = []
+            
+            for tool_call in tool_calls:
+                tool_call_id = tool_call.get("id")
+                function_data = tool_call.get("function", {})
+                function_name = function_data.get("name")
+                arguments = function_data.get("arguments", {})
+                
+                logger.info(f"Processing tool call: {function_name}, ID: {tool_call_id}")
+                
+                if function_name == "schedule_meeting":
+                    if isinstance(arguments, str):
+                        try:
+                            arguments = json.loads(arguments)
+                        except json.JSONDecodeError as e:
+                            logger.error(f"Failed to parse arguments: {e}")
+                            results.append({
+                                "toolCallId": tool_call_id,
+                                "result": f"Error parsing arguments: {str(e)}"
+                            })
+                            continue
+                    
+                    logger.info(f"Meeting details: {arguments}")
+                    
+                    required_fields = ["userName", "meetingDate", "meetingTime", "meetingTitle"]
+                    missing_fields = [field for field in required_fields if field not in arguments]
+                    
+                    if missing_fields:
+                        logger.error(f"Missing fields: {missing_fields}")
+                        results.append({
+                            "toolCallId": tool_call_id,
+                            "result": f"Missing required fields: {missing_fields}"
+                        })
+                        continue
+                    
+                    if calendar is None:
+                        logger.error("CalendarService not available")
+                        results.append({
+                            "toolCallId": tool_call_id,
+                            "result": "Calendar service not available"
+                        })
+                        continue
+                    
+                    try:
+                        event = calendar.create_event({
+                            "name": arguments["userName"],
+                            "date": arguments["meetingDate"],
+                            "time": arguments["meetingTime"],
+                            "title": arguments["meetingTitle"]
+                        })
+                        
+                        logger.info(f"Calendar event created: {event}")
+                        
+                        success_message = f"Meeting scheduled successfully for {arguments['userName']} on {arguments['meetingDate']} at {arguments['meetingTime']}. Title: {arguments['meetingTitle']}"
+                        if event.get('id'):
+                            success_message += f". Event ID: {event.get('id')}"
+                        
+                        results.append({
+                            "toolCallId": tool_call_id,
+                            "result": success_message
+                        })
+                        
+                    except Exception as e:
+                        logger.error(f"Failed to create calendar event: {str(e)}")
+                        results.append({
+                            "toolCallId": tool_call_id,
+                            "result": f"Error creating calendar event: {str(e)}"
+                        })
+            
+            return JSONResponse({"results": results})
+        
+        elif message_type in ["assistant.started", "status-update", "speech-update", "transcript", "conversation-update"]:
+            logger.info(f"Acknowledging message type: {message_type}")
+            return JSONResponse({"ok": True})
+        
+        elif message_type == "function-call":
             function_call = message.get("functionCall", {})
             function_name = function_call.get("name")
             tool_call_id = function_call.get("toolCallId")
+            arguments = function_call.get("arguments", {})
             
-            logger.info(f"Function call: {function_name}, ID: {tool_call_id}")
+            logger.info(f"Legacy function call: {function_name}, ID: {tool_call_id}")
             
             if function_name == "schedule_meeting":
-                arguments = function_call.get("arguments", {})
-                
                 if isinstance(arguments, str):
                     try:
                         arguments = json.loads(arguments)
@@ -130,16 +211,14 @@ async def webhook(request: Request):
                     
                     logger.info(f"Calendar event created: {event}")
                     
+                    success_message = f"Meeting scheduled successfully for {arguments['userName']} on {arguments['meetingDate']} at {arguments['meetingTime']}. Title: {arguments['meetingTitle']}"
+                    if event.get('id'):
+                        success_message += f". Event ID: {event.get('id')}"
+                    
                     return JSONResponse({
                         "results": [{
                             "toolCallId": tool_call_id,
-                            "result": {
-                                "success": True,
-                                "message": "Meeting scheduled successfully",
-                                "event_id": event.get("id"),
-                                "event_link": event.get("link"),
-                                "summary": event.get("summary")
-                            }
+                            "result": success_message
                         }]
                     })
                     
@@ -152,15 +231,11 @@ async def webhook(request: Request):
                         }]
                     })
         
-        elif message_type in ["assistant.started", "status-update", "speech-update", "transcript", "conversation-update"]:
-            logger.info(f"Acknowledging message type: {message_type}")
-            return JSONResponse({"ok": True})
-        
         return JSONResponse({"ok": True})
         
     except Exception as e:
         logger.error(f"Webhook processing failed: {str(e)}")
-        return JSONResponse({"ok": True})
+        return JSONResponse({"error": str(e)})
 
 @app.post("/test-schedule")
 async def test_schedule():
@@ -208,5 +283,6 @@ async def debug():
         "files_in_current": os.listdir('.'),
         "service_account_env_set": "SERVICE_ACCOUNT_JSON" in os.environ,
         "calendar_service_file_exists": os.path.exists('calendar_scheduler.py'),
-        "calendar_service_import_attempted": calendar is not None
+        "calendar_service_import_attempted": calendar is not None,
+        "calendar_service_available": calendar is not None
     }
