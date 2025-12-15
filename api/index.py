@@ -1,18 +1,20 @@
-from http.server import BaseHTTPRequestHandler
+from flask import Flask, request
+import json
 
-class Handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        
-        # Route the request
-        if self.path == '/health':
-            response = b'{"status": "healthy"}'
-        elif self.path == '/':
-            response = b'{"message": "API is running", "status": "ok"}'
-        else:
-            self.send_response(404)
-            response = b'{"error": "Not found"}'
-        
-        self.wfile.write(response)
+app = Flask(__name__)
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def catch_all(path):
+    # Basic routing
+    if request.method == 'GET':
+        if path == 'health' or request.path == '/health':
+            return {'status': 'healthy'}
+        elif path == '':
+            return {'message': 'API is running', 'status': 'ok'}
+    
+    return {'error': 'Not found'}, 404
+
+# ⚠️ CRITICAL: Export the Flask app directly for Vercel
+# Vercel will automatically wrap it
+application = app
