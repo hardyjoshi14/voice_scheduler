@@ -36,7 +36,7 @@ A real-time voice assistant that schedules meetings via natural conversation. Us
 
 1.  **Clone & Install**:
     ```bash
-    git clone https://github.com/YOUR_USERNAME/voice-scheduler.git
+    git clone https://github.com/hardyjoshi14/voice-scheduler.git
     cd voice-scheduler
     python -m venv venv
     source venv/bin/activate  # Windows: venv\Scripts\activate

@@ -86,7 +86,7 @@ response = requests.post(
 
 if response.status_code == 201:
     agent = response.json()
-    print("✅ Agent created successfully!")
+    print("Agent created successfully!")
     print(f"Agent ID: {agent['id']}")
     print(f"Dashboard URL: https://dashboard.vapi.ai/assistants/{agent['id']}")
 else:
