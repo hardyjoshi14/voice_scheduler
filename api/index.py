@@ -5,10 +5,17 @@ import logging
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+project_root = os.path.dirname(os.path.dirname(__file__))  
+sys.path.insert(0, project_root)  
+sys.path.append(project_root)    
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+logger.info(f"✅ Current directory: {os.getcwd()}")
+logger.info(f"✅ Project root added to path: {project_root}")
+if os.path.exists(project_root):
+    logger.info(f"✅ Files in project root: {os.listdir(project_root)}")
 
 app = FastAPI(title="Voice Scheduler API")
 
@@ -18,6 +25,7 @@ try:
     logger.info("CalendarService imported successfully")
 except ImportError as e:
     logger.error(f"Failed to import CalendarService: {e}")
+    logger.error(f"Python path is: {sys.path}")
     calendar = None
 except Exception as e:
     logger.error(f"CalendarService initialization failed: {e}")
