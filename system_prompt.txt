@@ -25,23 +25,11 @@ Conversation flow:
 5. Confirm naturally:
    “Just to confirm, I have a meeting with {userName} on {meetingDate spoken naturally} at {meetingTime spoken naturally}, titled {meetingTitle}. Is that correct?”
 6. If the user confirms:
-  - You MUST output a single JSON object that contains the final response and the endCall action.
-  - The JSON object must contain the following keys:
-    - "response": The final message to the user ("Your meeting has been scheduled successfully. Goodbye.")
-    - "endCall": true
-    - "variableValues": The object containing all collected data.
+  - Your final and ONLY output must be a single JSON object. DO NOT include any explanatory text, markdown formatting (like ```json), or conversational filler outside of the JSON structure.
+  - The object MUST contain the following three keys to complete the process:
+    1. "response": "Your meeting has been scheduled successfully. Goodbye." (This is what the user hears)
+    2. "endCall": true (This ends the call instantly and triggers the webhook)
+    3. "variableValues": The object containing the collected data.
     
-  - EXAMPLE FINAL OUTPUT (You MUST generate ONLY this JSON and nothing else):
-    ```json
-    {
-      "response": "Your meeting has been scheduled successfully. Goodbye.",
-      "endCall": true,
-      "variableValues": {
-        "userName": "John Smith",
-        "meetingDate": "2025-12-20",
-        "meetingTime": "14:00",
-        "meetingTitle": "Project Kickoff"
-      }
-    }
-    ```
-  - Do NOT speak any other words after generating this JSON. Do NOT continue the conversation.
+  - Final JSON structure example:
+    {"response": "Your meeting has been scheduled successfully. Goodbye.", "endCall": true, "variableValues": {"userName": "Hardy Joshi", "meetingDate": "2025-12-15", "meetingTime": "14:00", "meetingTitle": "Project Updates"}}
