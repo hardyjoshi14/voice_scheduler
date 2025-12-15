@@ -12,6 +12,9 @@ headers = {
     "Content-Type": "application/json"
 }
 
+with open("system_prompt.txt", "r") as f:
+    system_prompt = f.read()
+
 agent_config = {
     "name": "Voice Scheduler",
     "firstMessage": "Hello! I'm your scheduling assistant. May I have your name?",
@@ -26,15 +29,53 @@ agent_config = {
         "messages": [
             {
                 "role": "system",
-                "content": open("system_prompt.txt").read()
+                "content": system_prompt
+            }
+        ],
+        "tools": [
+            {
+                "type": "function",
+                "function": {
+                    "name": "schedule_meeting",
+                    "description": "Schedule a meeting when all details are collected and confirmed",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "userName": {
+                                "type": "string",
+                                "description": "Full name of the user"
+                            },
+                            "meetingDate": {
+                                "type": "string", 
+                                "description": "Date in YYYY-MM-DD format (e.g., 2024-12-15)"
+                            },
+                            "meetingTime": {
+                                "type": "string",
+                                "description": "Time in HH:MM format (24-hour, e.g., 14:30)"
+                            },
+                            "meetingTitle": {
+                                "type": "string",
+                                "description": "Title/description of the meeting"
+                            }
+                        },
+                        "required": ["userName", "meetingDate", "meetingTime", "meetingTitle"]
+                    }
+                }
             }
         ]
     },
-    "voice": {"provider": "azure", "voiceId": "en-US-JennyNeural"},
-    "transcriber": {"provider": "deepgram", "model": "nova-2"},
-    "server": {"url": WEBHOOK_URL, "timeoutSeconds": 20},
-    "clientMessages": ["transcript", "hang", "metadata", "tool-calls", "tool-calls-result", "speech-update", "conversation-update", "function-call"],
-    "variables": ["userName", "meetingDate", "meetingTime", "meetingTitle"]
+    "voice": {
+        "provider": "azure", 
+        "voiceId": "en-US-JennyNeural"
+    },
+    "transcriber": {
+        "provider": "deepgram", 
+        "model": "nova-2"
+    },
+    "server": {
+        "url": WEBHOOK_URL, 
+        "timeoutSeconds": 20
+    }
 }
 
 response = requests.post(
@@ -45,8 +86,9 @@ response = requests.post(
 
 if response.status_code == 201:
     agent = response.json()
-    print("Agent created successfully!")
+    print("✅ Agent created successfully!")
     print(f"Agent ID: {agent['id']}")
     print(f"Dashboard URL: https://dashboard.vapi.ai/assistants/{agent['id']}")
 else:
-    print(f"Failed to create agent: {response.status_code} - {response.text}")
+    print(f"Failed to create agent: {response.status_code}")
+    print(f"Response: {response.text}")
