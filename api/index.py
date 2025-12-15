@@ -1,56 +1,48 @@
-from http.server import BaseHTTPRequestHandler
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+import logging
 import json
-import sys
-import os
 
-# Try to import FastAPI - if it fails, we'll still have working endpoints
-try:
-    from fastapi import FastAPI
-    from fastapi.responses import JSONResponse
-    import uvicorn
-    FASTAPI_AVAILABLE = True
-    print("✅ FastAPI imports successful")
-except ImportError as e:
-    FASTAPI_AVAILABLE = False
-    print(f"⚠️ FastAPI not available: {e}")
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-class Handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
+app = FastAPI(title="Voice Scheduler API")
+
+# Add CORS if needed
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/")
+async def root():
+    return {"message": "Voice Scheduler API", "status": "ok", "framework": "FastAPI"}
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "framework": "FastAPI"}
+
+@app.post("/webhook")
+async def webhook(request: Request):
+    try:
+        data = await request.json()
+        logger.info(f"Webhook received: {data.get('message', {}).get('type')}")
         
-        if self.path == '/health':
-            response = b'{"status": "healthy", "framework": "BaseHTTPRequestHandler"}'
-        elif self.path == '/':
-            response = b'{"message": "Voice Scheduler API", "status": "ok", "framework": "BaseHTTPRequestHandler"}'
-        elif self.path == '/fastapi-test':
-            if FASTAPI_AVAILABLE:
-                response = b'{"message": "FastAPI is available!", "status": "ok"}'
-            else:
-                response = b'{"error": "FastAPI not installed", "status": "warning"}'
-        else:
-            self.send_response(404)
-            response = b'{"error": "Not found"}'
+        # TODO: Add your CalendarService logic here
         
-        self.wfile.write(response)
-    
-    def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
-        post_data = self.rfile.read(content_length)
-        
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        
-        try:
-            data = json.loads(post_data.decode('utf-8'))
-            response = {
-                "ok": True,
-                "message": "Webhook received",
-                "type": data.get("message", {}).get("type", "unknown"),
-                "framework": "BaseHTTPRequestHandler"
-            }
-            self.wfile.write(json.dumps(response).encode('utf-8'))
-        except:
-            self.wfile.write(b'{"ok": true}')
+        return JSONResponse({
+            "ok": True, 
+            "message": "Webhook processed",
+            "framework": "FastAPI"
+        })
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        return JSONResponse({"ok": True})
+
+# ⚠️ IMPORTANT: For Vercel to recognize this as a serverless function
+# Export the app with the name 'app'
+# Vercel's Python runtime automatically detects FastAPI apps
