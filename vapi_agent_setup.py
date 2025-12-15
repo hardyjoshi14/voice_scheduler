@@ -23,9 +23,6 @@ agent_config = {
         "model": "gpt-4o",
         "temperature": 0.5,
         "maxTokens": 250,
-        "responseFormat": { 
-            "type": "json_object"
-        },
         "messages": [
             {
                 "role": "system",

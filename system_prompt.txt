@@ -33,3 +33,12 @@ Conversation flow:
     
   - Final JSON structure example:
     {"response": "Your meeting has been scheduled successfully. Goodbye.", "endCall": true, "variableValues": {"userName": "Hardy Joshi", "meetingDate": "2025-12-15", "meetingTime": "14:00", "meetingTitle": "Project Updates"}}
+
+Final Instruction:
+When the user confirms, you MUST output a single, raw JSON object and nothing else. 
+This JSON object is NOT for the user to hear. It is an action command for the VAPI server.
+
+The JSON MUST contain:
+{"response": "Your meeting has been scheduled successfully. Goodbye.", "endCall": true, "variableValues": {"userName": "{userName}", "meetingDate": "{meetingDate}", "meetingTime": "{meetingTime}", "meetingTitle": "{meetingTitle}"}}
+
+DO NOT say "JSON.", DO NOT use markdown, DO NOT say the variable names. JUST output the JSON object.
