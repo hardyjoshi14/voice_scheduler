@@ -194,3 +194,20 @@ async def test_schedule():
             "success": False,
             "error": str(e)
         }, status_code=500)
+
+@app.get("/debug")
+async def debug():
+    """Debug endpoint to see what's happening on Vercel"""
+    import os
+    import sys
+    
+    return {
+        "python_path": sys.path,
+        "current_dir": os.getcwd(),
+        "files_in_current": os.listdir('.'),
+        "parent_dir": os.path.dirname(os.getcwd()),
+        "files_in_parent": os.listdir('..') if os.path.exists('..') else [],
+        "service_account_env_set": "SERVICE_ACCOUNT_JSON" in os.environ,
+        "calendar_service_file_exists": os.path.exists('../calendar_scheduler.py'),
+        "import_error": "Check logs for details"
+    }
