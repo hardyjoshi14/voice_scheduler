@@ -8,12 +8,17 @@ logger = logging.getLogger(__name__)
 
 class CalendarService:
     def __init__(self):
-        self.SCOPES = ['https://www.googleapis.com/auth/calendar']
-        self.creds = Credentials.from_service_account_file(
-            'service_account.json',
-            scopes=self.SCOPES
-        )
-        self.service = build('calendar', 'v3', credentials=self.creds)
+        try:
+            self.SCOPES = ['https://www.googleapis.com/auth/calendar']
+            self.creds = Credentials.from_service_account_file(
+                'service_account.json',
+                scopes=self.SCOPES
+            )
+            self.service = build('calendar', 'v3', credentials=self.creds)
+            print("CalendarService initialized successfully")
+        except Exception as e:
+            print(f"CalendarService initialization failed: {e}")
+            raise
     
     def create_event(self, data:dict):
         """
@@ -24,6 +29,7 @@ class CalendarService:
             "title": "Meeting Title"
         }
         """
+        print(f"Creating event with data: {data}")
         start_time = datetime.fromisoformat(f"{data['date']}T{data['time']}")
         end_time = start_time + timedelta(hours=1)
 
