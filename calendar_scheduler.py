@@ -1,4 +1,6 @@
 import logging
+import os
+import json
 from datetime import datetime, timedelta
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
@@ -8,13 +10,20 @@ logger = logging.getLogger(__name__)
 class CalendarService:
     def __init__(self):
         self.SCOPES = ['https://www.googleapis.com/auth/calendar']
+
+        service_account_json = os.environ.get('SERVICE_ACCOUNT_JSON')
+        if not service_account_json:
+            raise ValueError("SERVICE_ACCOUNT_JSON environment variable not set")
         
-        self.creds = Credentials.from_service_account_file(
-            'service_account.json',
+        service_account_info = json.loads(service_account_json)
+        
+        self.creds = Credentials.from_service_account_info(
+            service_account_info,
             scopes=self.SCOPES
         )
         
         self.service = build('calendar', 'v3', credentials=self.creds)
+        logger.info("CalendarService initialized from environment variable")
     
     def create_event(self, data:dict):
         """Create a calendar event"""
@@ -35,6 +44,7 @@ class CalendarService:
                 calendarId='200c381b5325a04e286aca01ee48e02233316fb1131b5a6e03486fb33793fb98@group.calendar.google.com',
                 body=event
             ).execute()
+            logger.info(f"Event created: {created_event.get('id')}")
 
             return {
                 'id': created_event.get('id'),
