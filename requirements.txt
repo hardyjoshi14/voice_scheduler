@@ -3,3 +3,4 @@ uvicorn==0.38.0
 google-api-python-client==2.187.0
 google-auth==2.43.0
 python-dotenv==1.2.1
+flask==3.0.0
