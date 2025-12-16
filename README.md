@@ -7,6 +7,7 @@ A real-time voice assistant that schedules meetings via natural conversation. Us
 ## 🚀 Live Deployment
 
 *   **Voice Agent**: Accessible via VAPI dashboard *(https://dashboard.vapi.ai/assistants/878340b4-0042-4fd9-937f-4a97b7107303)* 
+                     Demo link * (https://vapi.ai?demo=true&shareKey=5c6fda75-49aa-4f71-b74f-f1f31b167d2e&assistantId=878340b4-0042-4fd9-937f-4a97b7107303)*
 *   **Backend API**: `https://voice-scheduler-ten.vercel.app`
 
 ## 📞 How to Test
